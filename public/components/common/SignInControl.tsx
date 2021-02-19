@@ -62,10 +62,9 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
         </div>
       )}
 
-      {providersLen > 0 && <div className="c-divider">OR</div>}
-
       {props.useEmail && (
         <div className="l-signin-email">
+          {providersLen > 0 && <div className="c-divider">OR</div>}
           <p>Enter your email address to sign in</p>
           <Form error={error}>
             <Input

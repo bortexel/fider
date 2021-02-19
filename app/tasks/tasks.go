@@ -1,9 +1,14 @@
 package tasks
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -156,8 +161,84 @@ func NotifyAboutNewPost(post *models.Post) worker.Task {
 			Props:        props,
 		})
 
+		// Discord notification
+		webhookUrl := os.Getenv("DISCORD_WEBHOOK")
+		if webhookUrl != "" {
+			payload, err := json.Marshal(DiscordMessage{
+				Embeds: []Embed{
+					{
+						Title:       post.Title,
+						Type:        "rich",
+						Description: post.Description,
+						URL:         fmt.Sprintf(web.BaseURL(c)+"/posts/%s/%s", strconv.Itoa(post.Number), post.Slug),
+						Color:       0x2F3136,
+						Footer: &EmbedFooter{
+							Text: "Чтобы проголосовать, необходимо авторизоваться на ideas.bortexel.ru.",
+						},
+						Author: &EmbedAuthor{
+							Name:    post.User.Name,
+							IconURL: post.User.AvatarURL,
+						},
+					},
+				},
+			})
+
+			if err != nil {
+				return nil
+			}
+
+			request, err := http.NewRequest(http.MethodPost, webhookUrl, bytes.NewReader(payload))
+			if err != nil {
+				return nil
+			}
+
+			client := &http.Client{}
+			request.Header.Set("Content-Type", "application/json")
+			_, _ = client.Do(request)
+		}
+
 		return nil
 	})
+}
+
+type DiscordMessage struct {
+	Content string  `json:"content,omitempty"`
+	Embeds  []Embed `json:"embeds"`
+}
+
+type Embed struct {
+	Title       string          `json:"title,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Description string          `json:"description,omitempty"`
+	URL         string          `json:"url,omitempty"`
+	Color       int             `json:"color,omitempty"`
+	Footer      *EmbedFooter    `json:"footer,omitempty"`
+	Thumbnail   *EmbedThumbnail `json:"thumbnail,omitempty"`
+	Author      *EmbedAuthor    `json:"author,omitempty"`
+	Fields      *[]EmbedField   `json:"fields,omitempty"`
+}
+
+type EmbedFooter struct {
+	Text    string `json:"text"`
+	IconURL string `json:"icon_url,omitempty"`
+}
+
+type EmbedThumbnail struct {
+	URL    string `json:"url,omitempty"`
+	Height int    `json:"height,omitempty"`
+	Width  int    `json:"width,omitempty"`
+}
+
+type EmbedAuthor struct {
+	Name    string `json:"name,omitempty"`
+	URL     string `json:"url,omitempty"`
+	IconURL string `json:"icon_url,omitempty"`
+}
+
+type EmbedField struct {
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Inline bool   `json:"inline,omitempty"`
 }
 
 //NotifyAboutNewComment sends a notification (web and email) to subscribers

@@ -37,7 +37,7 @@ export const SignInModal: React.StatelessComponent<SignInModalProps> = props => 
       </p>
     </>
   ) : (
-    <SignInControl useEmail={true} onEmailSent={onEmailSent} />
+    <SignInControl useEmail={false} onEmailSent={onEmailSent} />
   );
 
   return (
