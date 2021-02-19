@@ -161,6 +161,11 @@ func NotifyAboutNewPost(post *models.Post) worker.Task {
 			Props:        props,
 		})
 
+		description := post.Description
+		if len(description) > 2000 {
+			description = string([]rune(description)[:2000]) + "..."
+		}
+
 		// Discord notification
 		webhookUrl := os.Getenv("DISCORD_WEBHOOK")
 		if webhookUrl != "" {
@@ -169,7 +174,7 @@ func NotifyAboutNewPost(post *models.Post) worker.Task {
 					{
 						Title:       post.Title,
 						Type:        "rich",
-						Description: post.Description,
+						Description: description,
 						URL:         fmt.Sprintf(web.BaseURL(c)+"/posts/%s/%s", strconv.Itoa(post.Number), post.Slug),
 						Color:       0x2F3136,
 						Footer: &EmbedFooter{
