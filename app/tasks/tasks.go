@@ -162,7 +162,7 @@ func NotifyAboutNewPost(post *models.Post) worker.Task {
 		})
 
 		description := post.Description
-		if len(description) > 2000 {
+		if len([]rune(description)) > 2000 {
 			description = string([]rune(description)[:2000]) + "..."
 		}
 
