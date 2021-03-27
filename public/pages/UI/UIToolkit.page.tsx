@@ -1,7 +1,7 @@
-import "./UIToolkit.page.scss";
+import "./UIToolkit.page.scss"
 
-import React, { useState } from "react";
-import { PostStatus, UserStatus } from "@fider/models";
+import React, { useState } from "react"
+import { PostStatus, UserStatus } from "@fider/models"
 import {
   Heading,
   Button,
@@ -25,55 +25,55 @@ import {
   SelectOption,
   ButtonClickEvent,
   Message,
-  Hint
-} from "@fider/components";
-import { User, UserRole, Tag } from "@fider/models";
-import { notify, Failure } from "@fider/services";
-import { DropDown, DropDownItem } from "@fider/components";
-import { FaSearch, FaRegLightbulb, FaCogs } from "react-icons/fa";
+  Hint,
+} from "@fider/components"
+import { User, UserRole, Tag } from "@fider/models"
+import { notify, Failure } from "@fider/services"
+import { DropDown, DropDownItem } from "@fider/components"
+import { FaSearch, FaRegLightbulb, FaCogs } from "react-icons/fa"
 
 const jonSnow: User = {
   id: 0,
   name: "Jon Snow",
   role: UserRole.Administrator,
   status: UserStatus.Active,
-  avatarURL: "/avatars/letter/0/Jon%20Snow"
-};
+  avatarURL: "/avatars/letter/0/Jon%20Snow",
+}
 
 const aryaStark: User = {
   id: 0,
   name: "Arya Snow",
   role: UserRole.Visitor,
   status: UserStatus.Active,
-  avatarURL: "/avatars/letter/0/Arya%20Snow"
-};
+  avatarURL: "/avatars/letter/0/Arya%20Snow",
+}
 
-const easyTag: Tag = { id: 2, slug: "easy", name: "easy", color: "FB3A62", isPublic: true };
-const hardTag: Tag = { id: 3, slug: "hard", name: "hard", color: "fbca04", isPublic: false };
+const easyTag: Tag = { id: 2, slug: "easy", name: "easy", color: "FB3A62", isPublic: true }
+const hardTag: Tag = { id: 3, slug: "hard", name: "hard", color: "fbca04", isPublic: false }
 
-const visibilityPublic = { label: "Public", value: "public" };
-const visibilityPrivate = { label: "Private", value: "private" };
+const visibilityPublic = { label: "Public", value: "public" }
+const visibilityPrivate = { label: "Private", value: "private" }
 
 const UIToolkitPage = () => {
-  const [error, setError] = useState<Failure | undefined>(undefined);
+  const [error, setError] = useState<Failure | undefined>(undefined)
 
   const notifyError = async () => {
-    notify.error("Something went wrong...");
-  };
+    notify.error("Something went wrong...")
+  }
 
   const notifySuccess = async () => {
-    notify.success("Congratulations! It worked!");
-  };
+    notify.success("Congratulations! It worked!")
+  }
 
   const notifyStatusChange = (opt?: SelectOption) => {
     if (opt) {
-      notify.success(opt.value);
+      notify.success(opt.value)
     }
-  };
+  }
 
   const showLoading = async (e: ButtonClickEvent) => {
-    return e.preventEnable();
-  };
+    return e.preventEnable()
+  }
 
   const forceError = async () => {
     setError({
@@ -81,24 +81,24 @@ const UIToolkitPage = () => {
         { field: "title", message: "Title is mandatory" },
         { field: "description", message: "Error #1" },
         { field: "description", message: "Error #2" },
-        { field: "status", message: "Status is mandatory" }
-      ]
-    });
-  };
+        { field: "status", message: "Status is mandatory" },
+      ],
+    })
+  }
 
   const renderText = (item?: DropDownItem) => {
     if (item) {
-      return `${item.label} (value: ${item.value})`;
+      return `${item.label} (value: ${item.value})`
     }
-    return <span>No country is selected</span>;
-  };
+    return <span>No country is selected</span>
+  }
 
   const renderControl = (item?: DropDownItem) => {
     if (item) {
-      return item.render;
+      return item.render
     }
-    return <span>...</span>;
-  };
+    return <span>...</span>
+  }
 
   return (
     <div id="p-ui-toolkit" className="page container">
@@ -185,13 +185,7 @@ const UIToolkitPage = () => {
 
       <Heading title="Page Heading" icon={FaCogs} subtitle="This is a page heading" />
 
-      <Heading
-        title="Section Heading"
-        icon={FaRegLightbulb}
-        subtitle="This is a page heading"
-        size="small"
-        dividing={true}
-      />
+      <Heading title="Section Heading" icon={FaRegLightbulb} subtitle="This is a page heading" size="small" dividing={true} />
 
       <h1>Buttons</h1>
       <List>
@@ -412,7 +406,7 @@ const UIToolkitPage = () => {
 
       <h1>Hints</h1>
       <Hint permanentCloseKey="ui-toolkip-example">Did you know that you can close this permanently?</Hint>
-      <Hint>You can't close this one :)</Hint>
+      <Hint>You can&apos;t close this one :)</Hint>
 
       <h1>Form</h1>
       <Form error={error}>
@@ -439,12 +433,7 @@ const UIToolkitPage = () => {
             <Input label="Title3" field="title3" />
           </div>
           <div className="col-md-3">
-            <RadioButton
-              label="Visibility"
-              field="visibility"
-              defaultOption={visibilityPublic}
-              options={[visibilityPrivate, visibilityPublic]}
-            />
+            <RadioButton label="Visibility" field="visibility" defaultOption={visibilityPublic} options={[visibilityPrivate, visibilityPublic]} />
           </div>
         </div>
 
@@ -454,14 +443,18 @@ const UIToolkitPage = () => {
           options={[
             { value: "open", label: "Open" },
             { value: "started", label: "Started" },
-            { value: "planned", label: "Planned" }
+            { value: "planned", label: "Planned" },
           ]}
           onChange={notifyStatusChange}
         />
 
         <Field label="Number">
           <DropDown
-            items={[{ label: "One", value: "1" }, { label: "Two", value: "2" }, { label: "Three", value: "3" }]}
+            items={[
+              { label: "One", value: "1" },
+              { label: "Two", value: "2" },
+              { label: "Three", value: "3" },
+            ]}
             defaultValue={"1"}
             placeholder="Select a number"
           />
@@ -472,7 +465,7 @@ const UIToolkitPage = () => {
             items={[
               { label: "Brazil", value: "br" },
               { label: "United States", value: "us" },
-              { label: "Ireland", value: "ie" }
+              { label: "Ireland", value: "ie" },
             ]}
             defaultValue={"1"}
             renderText={renderText}
@@ -485,7 +478,7 @@ const UIToolkitPage = () => {
             items={[
               { label: "Green", value: "green", render: <span style={{ color: "green" }}>Green</span> },
               { label: "Red", value: "red", render: <span style={{ color: "red" }}>Red</span> },
-              { label: "Blue", value: "blue", render: <span style={{ color: "blue" }}>Blue</span> }
+              { label: "Blue", value: "blue", render: <span style={{ color: "blue" }}>Blue</span> },
             ]}
             placeholder="Select a color"
             inline={true}
@@ -503,7 +496,7 @@ const UIToolkitPage = () => {
         <Input field="search" placeholder="Search..." icon={FaSearch} />
       </Segment>
     </div>
-  );
-};
+  )
+}
 
-export default UIToolkitPage;
+export default UIToolkitPage

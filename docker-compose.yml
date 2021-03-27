@@ -2,7 +2,7 @@ version: '2'
 services:
   db:
     restart: always
-    image: postgres:9.6
+    image: postgres:12
     volumes:
       - fider-test:/var/lib/postgresql/data
     environment:

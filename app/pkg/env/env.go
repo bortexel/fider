@@ -26,14 +26,11 @@ type config struct {
 	Rendergun      struct {
 		URL string `env:"RENDERGUN_URL"`
 	}
-	Database struct {
+	Experimental_SSR_SEO bool `env:"EXPERIMENTAL_SSR_SEO,default=false"`
+	Database             struct {
 		URL          string `env:"DATABASE_URL,required"`
 		MaxIdleConns int    `env:"DATABASE_MAX_IDLE_CONNS,default=2,strict"`
 		MaxOpenConns int    `env:"DATABASE_MAX_OPEN_CONNS,default=4,strict"`
-	}
-	Stripe struct {
-		SecretKey string `env:"STRIPE_SECRET_KEY"`
-		PublicKey string `env:"STRIPE_PUBLIC_KEY"`
 	}
 	CDN struct {
 		Host string `env:"CDN_HOST"`
@@ -57,18 +54,19 @@ type config struct {
 	}
 	Email struct {
 		NoReply   string `env:"EMAIL_NOREPLY,required"`
-		Whitelist string `env:"EMAIL_WHITELIST"`
-		Blacklist string `env:"EMAIL_BLACKLIST"`
+		Allowlist string `env:"EMAIL_ALLOWLIST"`
+		Blocklist string `env:"EMAIL_BLOCKLIST"`
 		Mailgun   struct {
 			APIKey string `env:"EMAIL_MAILGUN_API"`
 			Domain string `env:"EMAIL_MAILGUN_DOMAIN"`
 			Region string `env:"EMAIL_MAILGUN_REGION,default=US"`
 		}
 		SMTP struct {
-			Host     string `env:"EMAIL_SMTP_HOST"`
-			Port     string `env:"EMAIL_SMTP_PORT"`
-			Username string `env:"EMAIL_SMTP_USERNAME"`
-			Password string `env:"EMAIL_SMTP_PASSWORD"`
+			Host            string  `env:"EMAIL_SMTP_HOST"`
+			Port            string  `env:"EMAIL_SMTP_PORT"`
+			Username        string  `env:"EMAIL_SMTP_USERNAME"`
+			Password        string  `env:"EMAIL_SMTP_PASSWORD"`
+			EnableStartTLS  bool    `env:"EMAIL_SMTP_ENABLE_STARTTLS,default=true"`
 		}
 	}
 	BlobStorage struct {
@@ -127,11 +125,6 @@ func mustBeSet(name string) {
 	if value == "" {
 		panic(fmt.Errorf("Could not find environment variable named '%s'", name))
 	}
-}
-
-// IsBillingEnabled returns true if billing is enabled
-func IsBillingEnabled() bool {
-	return Config.Stripe.SecretKey != ""
 }
 
 // IsSingleHostMode returns true if host mode is set to single tenant

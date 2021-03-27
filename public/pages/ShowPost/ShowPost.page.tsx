@@ -1,9 +1,9 @@
-import "./ShowPost.page.scss";
+import "./ShowPost.page.scss"
 
-import React from "react";
+import React from "react"
 
-import { Comment, Post, Tag, Vote, ImageUpload } from "@fider/models";
-import { actions, Failure, Fider } from "@fider/services";
+import { Comment, Post, Tag, Vote, ImageUpload } from "@fider/models"
+import { actions, Failure, Fider } from "@fider/services"
 
 import {
   VoteCounter,
@@ -19,80 +19,75 @@ import {
   Form,
   TextArea,
   MultiImageUploader,
-  ImageViewer
-} from "@fider/components";
-import { FaSave, FaTimes, FaEdit } from "react-icons/fa";
-import { ResponseForm } from "./components/ResponseForm";
-import { TagsPanel } from "./components/TagsPanel";
-import { NotificationsPanel } from "./components/NotificationsPanel";
-import { ModerationPanel } from "./components/ModerationPanel";
-import { DiscussionPanel } from "./components/DiscussionPanel";
-import { VotesPanel } from "./components/VotesPanel";
+  ImageViewer,
+} from "@fider/components"
+import { FaSave, FaTimes, FaEdit } from "react-icons/fa"
+import { ResponseForm } from "./components/ResponseForm"
+import { TagsPanel } from "./components/TagsPanel"
+import { NotificationsPanel } from "./components/NotificationsPanel"
+import { ModerationPanel } from "./components/ModerationPanel"
+import { DiscussionPanel } from "./components/DiscussionPanel"
+import { VotesPanel } from "./components/VotesPanel"
 
 interface ShowPostPageProps {
-  post: Post;
-  subscribed: boolean;
-  comments: Comment[];
-  tags: Tag[];
-  votes: Vote[];
-  attachments: string[];
+  post: Post
+  subscribed: boolean
+  comments: Comment[]
+  tags: Tag[]
+  votes: Vote[]
+  attachments: string[]
 }
 
 interface ShowPostPageState {
-  editMode: boolean;
-  newTitle: string;
-  attachments: ImageUpload[];
-  newDescription: string;
-  error?: Failure;
+  editMode: boolean
+  newTitle: string
+  attachments: ImageUpload[]
+  newDescription: string
+  error?: Failure
 }
 
 export default class ShowPostPage extends React.Component<ShowPostPageProps, ShowPostPageState> {
   constructor(props: ShowPostPageProps) {
-    super(props);
+    super(props)
 
     this.state = {
       editMode: false,
       newTitle: this.props.post.title,
       newDescription: this.props.post.description,
-      attachments: []
-    };
+      attachments: [],
+    }
   }
 
   private saveChanges = async () => {
-    const result = await actions.updatePost(
-      this.props.post.number,
-      this.state.newTitle,
-      this.state.newDescription,
-      this.state.attachments
-    );
+    const result = await actions.updatePost(this.props.post.number, this.state.newTitle, this.state.newDescription, this.state.attachments)
     if (result.ok) {
-      location.reload();
+      location.reload()
     } else {
       this.setState({
-        error: result.error
-      });
+        error: result.error,
+      })
     }
-  };
+  }
 
   private setNewTitle = (newTitle: string) => {
-    this.setState({ newTitle });
-  };
+    this.setState({ newTitle })
+  }
 
   private setNewDescription = (newDescription: string) => {
-    this.setState({ newDescription });
-  };
+    this.setState({ newDescription })
+  }
 
   private setAttachments = (attachments: ImageUpload[]) => {
-    this.setState({ attachments });
-  };
+    this.setState({ attachments })
+  }
 
   private cancelEdit = async () => {
-    this.setState({ error: undefined, editMode: false });
-  };
+    this.setState({ error: undefined, editMode: false })
+  }
 
   private startEdit = async () => {
-    this.setState({ editMode: true });
-  };
+    this.setState({ editMode: true })
+  }
 
   public render() {
     return (
@@ -112,8 +107,7 @@ export default class ShowPostPage extends React.Component<ShowPostPageProps, Sho
                 )}
 
                 <span className="info">
-                  <Moment date={this.props.post.createdAt} /> &middot; <Avatar user={this.props.post.user} />{" "}
-                  <UserName user={this.props.post.user} />
+                  <Moment date={this.props.post.createdAt} /> &middot; <Avatar user={this.props.post.user} /> <UserName user={this.props.post.user} />
                 </span>
               </div>
             </ListItem>
@@ -123,18 +117,12 @@ export default class ShowPostPage extends React.Component<ShowPostPageProps, Sho
           {this.state.editMode ? (
             <Form error={this.state.error}>
               <TextArea field="description" value={this.state.newDescription} onChange={this.setNewDescription} />
-              <MultiImageUploader
-                field="attachments"
-                bkeys={this.props.attachments}
-                maxUploads={3}
-                previewMaxWidth={100}
-                onChange={this.setAttachments}
-              />
+              <MultiImageUploader field="attachments" bkeys={this.props.attachments} maxUploads={3} previewMaxWidth={100} onChange={this.setAttachments} />
             </Form>
           ) : (
             <>
               <MultiLineText className="description" text={this.props.post.description} style="simple" />
-              {this.props.attachments.map(x => (
+              {this.props.attachments.map((x) => (
                 <ImageViewer key={x} bkey={x} />
               ))}
             </>
@@ -174,7 +162,7 @@ export default class ShowPostPage extends React.Component<ShowPostPageProps, Sho
                     <ResponseForm post={this.props.post} />
                   </ListItem>
                 </List>
-              )
+              ),
             ]}
 
           <TagsPanel post={this.props.post} tags={this.props.tags} />
@@ -184,6 +172,6 @@ export default class ShowPostPage extends React.Component<ShowPostPageProps, Sho
 
         <DiscussionPanel post={this.props.post} comments={this.props.comments} />
       </div>
-    );
+    )
   }
 }

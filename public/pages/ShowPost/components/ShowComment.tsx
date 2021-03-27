@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Comment, Post, ImageUpload } from "@fider/models";
+import React, { useState } from "react"
+import { Comment, Post, ImageUpload } from "@fider/models"
 import {
   Avatar,
   UserName,
@@ -12,73 +12,73 @@ import {
   DropDownItem,
   Modal,
   ImageViewer,
-  MultiImageUploader
-} from "@fider/components";
-import { formatDate, Failure, actions } from "@fider/services";
-import { FaEllipsisH } from "react-icons/fa";
-import { useFider } from "@fider/hooks";
+  MultiImageUploader,
+} from "@fider/components"
+import { formatDate, Failure, actions } from "@fider/services"
+import { FaEllipsisH } from "react-icons/fa"
+import { useFider } from "@fider/hooks"
 
 interface ShowCommentProps {
-  post: Post;
-  comment: Comment;
+  post: Post
+  comment: Comment
 }
 
 export const ShowComment = (props: ShowCommentProps) => {
-  const fider = useFider();
-  const [isEditing, setIsEditing] = useState(false);
-  const [newContent, setNewContent] = useState("");
-  const [isDeleteConfirmationModalOpen, setIsDeleteConfirmationModalOpen] = useState(false);
-  const [attachments, setAttachments] = useState<ImageUpload[]>([]);
-  const [error, setError] = useState<Failure>();
+  const fider = useFider()
+  const [isEditing, setIsEditing] = useState(false)
+  const [newContent, setNewContent] = useState("")
+  const [isDeleteConfirmationModalOpen, setIsDeleteConfirmationModalOpen] = useState(false)
+  const [attachments, setAttachments] = useState<ImageUpload[]>([])
+  const [error, setError] = useState<Failure>()
 
   const canEditComment = (): boolean => {
     if (fider.session.isAuthenticated) {
-      return fider.session.user.isCollaborator || props.comment.user.id === fider.session.user.id;
+      return fider.session.user.isCollaborator || props.comment.user.id === fider.session.user.id
     }
-    return false;
-  };
+    return false
+  }
 
-  const clearError = () => setError(undefined);
+  const clearError = () => setError(undefined)
 
   const cancelEdit = async () => {
-    setIsEditing(false);
-    setNewContent("");
-    clearError();
-  };
+    setIsEditing(false)
+    setNewContent("")
+    clearError()
+  }
 
   const saveEdit = async () => {
-    const response = await actions.updateComment(props.post.number, props.comment.id, newContent, attachments);
+    const response = await actions.updateComment(props.post.number, props.comment.id, newContent, attachments)
     if (response.ok) {
-      location.reload();
+      location.reload()
     } else {
-      setError(response.error);
+      setError(response.error)
     }
-  };
+  }
 
   const renderEllipsis = () => {
-    return <FaEllipsisH />;
-  };
+    return <FaEllipsisH />
+  }
 
   const closeModal = async () => {
-    setIsDeleteConfirmationModalOpen(false);
-  };
+    setIsDeleteConfirmationModalOpen(false)
+  }
 
   const deleteComment = async () => {
-    const response = await actions.deleteComment(props.post.number, props.comment.id);
+    const response = await actions.deleteComment(props.post.number, props.comment.id)
     if (response.ok) {
-      location.reload();
+      location.reload()
     }
-  };
+  }
 
   const onActionSelected = (item: DropDownItem) => {
     if (item.value === "edit") {
-      setIsEditing(true);
-      setNewContent(props.comment.content);
-      clearError();
+      setIsEditing(true)
+      setNewContent(props.comment.content)
+      clearError()
     } else if (item.value === "delete") {
-      setIsDeleteConfirmationModalOpen(true);
+      setIsDeleteConfirmationModalOpen(true)
     }
-  };
+  }
 
   const modal = () => {
     return (
@@ -99,18 +99,16 @@ export const ShowComment = (props: ShowCommentProps) => {
           </Button>
         </Modal.Footer>
       </Modal.Window>
-    );
-  };
+    )
+  }
 
-  const comment = props.comment;
+  const comment = props.comment
 
   const editedMetadata = !!comment.editedAt && !!comment.editedBy && (
     <div className="c-comment-metadata">
-      <span title={`This comment has been edited by ${comment.editedBy!.name} on ${formatDate(comment.editedAt)}`}>
-        · edited
-      </span>
+      <span title={`This comment has been edited by ${comment.editedBy.name} on ${formatDate(comment.editedAt)}`}>· edited</span>
     </div>
-  );
+  )
 
   return (
     <div className="c-comment">
@@ -131,7 +129,7 @@ export const ShowComment = (props: ShowCommentProps) => {
             highlightSelected={false}
             items={[
               { label: "Edit", value: "edit" },
-              { label: "Delete", value: "delete", render: <span style={{ color: "red" }}>Delete</span> }
+              { label: "Delete", value: "delete", render: <span style={{ color: "red" }}>Delete</span> },
             ]}
             onChange={onActionSelected}
             renderControl={renderEllipsis}
@@ -140,20 +138,8 @@ export const ShowComment = (props: ShowCommentProps) => {
         <div className="c-comment-text">
           {isEditing ? (
             <Form error={error}>
-              <TextArea
-                field="content"
-                minRows={1}
-                value={newContent}
-                placeholder={comment.content}
-                onChange={setNewContent}
-              />
-              <MultiImageUploader
-                field="attachments"
-                bkeys={comment.attachments}
-                maxUploads={2}
-                previewMaxWidth={100}
-                onChange={setAttachments}
-              />
+              <TextArea field="content" minRows={1} value={newContent} placeholder={comment.content} onChange={setNewContent} />
+              <MultiImageUploader field="attachments" bkeys={comment.attachments} maxUploads={2} previewMaxWidth={100} onChange={setAttachments} />
               <Button size="tiny" onClick={saveEdit} color="positive">
                 Save
               </Button>
@@ -164,11 +150,11 @@ export const ShowComment = (props: ShowCommentProps) => {
           ) : (
             <>
               <MultiLineText text={comment.content} style="simple" />
-              {comment.attachments && comment.attachments.map(x => <ImageViewer key={x} bkey={x} />)}
+              {comment.attachments && comment.attachments.map((x) => <ImageViewer key={x} bkey={x} />)}
             </>
           )}
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
