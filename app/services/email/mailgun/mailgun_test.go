@@ -9,12 +9,11 @@ import (
 	"github.com/getfider/fider/app"
 	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/dto"
+	"github.com/getfider/fider/app/models/entity"
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/env"
 	"github.com/getfider/fider/app/services/email/mailgun"
 	"github.com/getfider/fider/app/services/httpclient/httpclientmock"
-
-	"github.com/getfider/fider/app/models"
 
 	"github.com/getfider/fider/app/services/email"
 
@@ -24,7 +23,7 @@ import (
 var ctx context.Context
 
 func reset() {
-	ctx = context.WithValue(context.Background(), app.TenantCtxKey, &models.Tenant{
+	ctx = context.WithValue(context.Background(), app.TenantCtxKey, &entity.Tenant{
 		Subdomain: "got",
 	})
 	bus.Init(mailgun.Service{}, httpclientmock.Service{})
@@ -38,7 +37,7 @@ func TestSend_Success(t *testing.T) {
 	bus.Publish(ctx, &cmd.SendMail{
 		From: "Fider Test",
 		To: []dto.Recipient{
-			dto.Recipient{
+			{
 				Name:    "Jon Sow",
 				Address: "jon.snow@got.com",
 			},
@@ -72,8 +71,8 @@ func TestSend_Success(t *testing.T) {
 		<meta name="viewport" content="width=device-width">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	</head>
-	<body bgcolor="#F7F7F7" style="font-size:16px">
-		<table width="100%" bgcolor="#F7F7F7" cellpadding="0" cellspacing="0" border="0" style="text-align:center;font-size:14px;">
+	<body bgcolor="#F7F7F7" style="font-size:18px">
+		<table width="100%" bgcolor="#F7F7F7" cellpadding="0" cellspacing="0" border="0" style="text-align:center;font-size:18px;">
 			<tr>
 				<td height="40">&nbsp;</td>
 			</tr>
@@ -87,7 +86,7 @@ func TestSend_Success(t *testing.T) {
 			</tr>
 			<tr>
 				<td>
-					<span style="color:#666;font-size:11px">This email was sent from a notification-only address that cannot accept incoming email. Please do not reply to this message.</span>
+					<span style="color:#666;font-size:12px">This email was sent from a notification-only address that cannot accept incoming email. Please do not reply to this message.</span>
 				</td>
 			</tr>
 			<tr>
@@ -105,7 +104,7 @@ func TestSend_SkipEmptyAddress(t *testing.T) {
 	bus.Publish(ctx, &cmd.SendMail{
 		From: "Fider Test",
 		To: []dto.Recipient{
-			dto.Recipient{
+			{
 				Name:    "Jon Sow",
 				Address: "",
 			},
@@ -127,7 +126,7 @@ func TestSend_SkipUnlistedAddress(t *testing.T) {
 	bus.Publish(ctx, &cmd.SendMail{
 		From: "Fider Test",
 		To: []dto.Recipient{
-			dto.Recipient{
+			{
 				Name:    "Jon Sow",
 				Address: "jon.snow@got.com",
 			},
@@ -149,14 +148,14 @@ func TestBatch_Success(t *testing.T) {
 	bus.Publish(ctx, &cmd.SendMail{
 		From: "Fider Test",
 		To: []dto.Recipient{
-			dto.Recipient{
+			{
 				Name:    "Jon Sow",
 				Address: "jon.snow@got.com",
 				Props: dto.Props{
 					"name": "Jon",
 				},
 			},
-			dto.Recipient{
+			{
 				Name:    "Arya Stark",
 				Address: "arya.start@got.com",
 				Props: dto.Props{
@@ -194,8 +193,8 @@ func TestBatch_Success(t *testing.T) {
 		<meta name="viewport" content="width=device-width">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	</head>
-	<body bgcolor="#F7F7F7" style="font-size:16px">
-		<table width="100%" bgcolor="#F7F7F7" cellpadding="0" cellspacing="0" border="0" style="text-align:center;font-size:14px;">
+	<body bgcolor="#F7F7F7" style="font-size:18px">
+		<table width="100%" bgcolor="#F7F7F7" cellpadding="0" cellspacing="0" border="0" style="text-align:center;font-size:18px;">
 			<tr>
 				<td height="40">&nbsp;</td>
 			</tr>
@@ -209,7 +208,7 @@ func TestBatch_Success(t *testing.T) {
 			</tr>
 			<tr>
 				<td>
-					<span style="color:#666;font-size:11px">This email was sent from a notification-only address that cannot accept incoming email. Please do not reply to this message.</span>
+					<span style="color:#666;font-size:12px">This email was sent from a notification-only address that cannot accept incoming email. Please do not reply to this message.</span>
 				</td>
 			</tr>
 			<tr>
@@ -227,7 +226,7 @@ func TestGetBaseURL(t *testing.T) {
 	sendMail := &cmd.SendMail{
 		From: "Fider Test",
 		To: []dto.Recipient{
-			dto.Recipient{
+			{
 				Name:    "Jon Sow",
 				Address: "jon.snow@got.com",
 			},

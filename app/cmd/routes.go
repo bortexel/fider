@@ -33,13 +33,13 @@ func routes(r *web.Engine) *web.Engine {
 	{
 		assets.Use(middlewares.CORS())
 		assets.Use(middlewares.ClientCache(365 * 24 * time.Hour))
-		assets.Get("/favicon", handlers.Favicon())
+		assets.Get("/static/favicon", handlers.Favicon())
 		assets.Static("/assets/*filepath", "dist")
 	}
 
 	r.Use(middlewares.Session())
 
-	r.Get("/-/health", handlers.Health())
+	r.Get("/_health", handlers.Health())
 	r.Get("/robots.txt", handlers.RobotsTXT())
 	r.Post("/_api/log-error", handlers.LogError())
 
@@ -48,7 +48,6 @@ func routes(r *web.Engine) *web.Engine {
 	r.Use(middlewares.Tenant())
 	r.Use(middlewares.User())
 
-	r.Get("/browser-not-supported", handlers.BrowserNotSupported())
 	r.Get("/privacy", handlers.LegalPage("Privacy Policy", "privacy.md"))
 	r.Get("/terms", handlers.LegalPage("Terms of Service", "terms.md"))
 
@@ -66,18 +65,18 @@ func routes(r *web.Engine) *web.Engine {
 	tenantAssets := r.Group()
 	{
 		tenantAssets.Use(middlewares.ClientCache(5 * 24 * time.Hour))
-		tenantAssets.Get("/avatars/letter/:id/:name", handlers.LetterAvatar())
-		tenantAssets.Get("/avatars/gravatar/:id/:name", handlers.Gravatar())
+		tenantAssets.Get("/static/avatars/letter/:id/:name", handlers.LetterAvatar())
+		tenantAssets.Get("/static/avatars/gravatar/:id/:name", handlers.Gravatar())
 
 		tenantAssets.Use(middlewares.ClientCache(30 * 24 * time.Hour))
-		tenantAssets.Get("/favicon/*bkey", handlers.Favicon())
-		tenantAssets.Get("/images/*bkey", handlers.ViewUploadedImage())
-		tenantAssets.Get("/custom/:md5.css", func(c *web.Context) error {
+		tenantAssets.Get("/static/favicon/*bkey", handlers.Favicon())
+		tenantAssets.Get("/static/images/*bkey", handlers.ViewUploadedImage())
+		tenantAssets.Get("/static/custom/:md5.css", func(c *web.Context) error {
 			return c.Blob(http.StatusOK, "text/css", []byte(c.Tenant().CustomCSS))
 		})
 	}
 
-	r.Get("/-/ui", handlers.Page("UI Toolkit", "A preview of Fider UI elements", "UIToolkit.page"))
+	r.Get("/_design", handlers.Page("Design System", "A preview of Fider UI elements", "DesignSystem.page"))
 	r.Get("/signup/verify", handlers.VerifySignUpKey())
 	r.Get("/signout", handlers.SignOut())
 	r.Get("/oauth/:provider/token", handlers.OAuthToken())
@@ -173,6 +172,7 @@ func routes(r *web.Engine) *web.Engine {
 		api.Use(middlewares.IsAuthenticated())
 
 		api.Post("/api/v1/posts", apiv1.CreatePost())
+		api.Put("/api/v1/posts/:number", apiv1.UpdatePost())
 		api.Post("/api/v1/posts/:number/comments", apiv1.PostComment())
 		api.Put("/api/v1/posts/:number/comments/:id", apiv1.UpdateComment())
 		api.Delete("/api/v1/posts/:number/comments/:id", apiv1.DeleteComment())
@@ -185,7 +185,6 @@ func routes(r *web.Engine) *web.Engine {
 		api.Use(middlewares.IsAuthorized(enum.RoleCollaborator, enum.RoleAdministrator))
 
 		api.Get("/api/v1/users", apiv1.ListUsers())
-		api.Put("/api/v1/posts/:number", apiv1.UpdatePost())
 		api.Get("/api/v1/posts/:number/votes", apiv1.ListVotes())
 		api.Post("/api/v1/invitations/send", apiv1.SendInvites())
 		api.Post("/api/v1/invitations/sample", apiv1.SendSampleInvite())

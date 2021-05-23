@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	"github.com/getfider/fider/app/models"
+	"github.com/getfider/fider/app/models/entity"
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/jsonq"
@@ -28,8 +28,7 @@ func createServer() *Server {
 		return nil
 	})
 
-	settings := &models.SystemSettings{}
-	engine := web.New(settings)
+	engine := web.New()
 
 	request, _ := http.NewRequest("GET", "/", nil)
 	recorder := httptest.NewRecorder()
@@ -55,13 +54,13 @@ func (s *Server) Use(middleware web.MiddlewareFunc) *Server {
 }
 
 // OnTenant set current context tenant
-func (s *Server) OnTenant(tenant *models.Tenant) *Server {
+func (s *Server) OnTenant(tenant *entity.Tenant) *Server {
 	s.context.SetTenant(tenant)
 	return s
 }
 
 // AsUser set current context user
-func (s *Server) AsUser(user *models.User) *Server {
+func (s *Server) AsUser(user *entity.User) *Server {
 	s.context.SetUser(user)
 	return s
 }
@@ -81,12 +80,6 @@ func (s *Server) AddHeader(name string, value string) *Server {
 // AddCookie add key-value to current context cookies
 func (s *Server) AddCookie(name string, value string) *Server {
 	s.context.Request.AddCookie(&http.Cookie{Name: name, Value: value})
-	return s
-}
-
-// WithClientIP set current ClientIP address
-func (s *Server) WithClientIP(clientIP string) *Server {
-	s.context.Request.ClientIP = clientIP
 	return s
 }
 

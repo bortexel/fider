@@ -13,9 +13,10 @@ import (
 	"time"
 
 	"github.com/getfider/fider/app"
-	"github.com/getfider/fider/app/models"
+	"github.com/getfider/fider/app/actions"
 	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/dto"
+	"github.com/getfider/fider/app/models/entity"
 	"github.com/getfider/fider/app/models/enum"
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
@@ -37,10 +38,10 @@ func linkWithText(text, baseURL, path string, args ...interface{}) template.HTML
 }
 
 //SendSignUpEmail is used to send the sign up email to requestor
-func SendSignUpEmail(model *models.CreateTenant, baseURL string) worker.Task {
+func SendSignUpEmail(action *actions.CreateTenant, baseURL string) worker.Task {
 	return describe("Send sign up email", func(c *worker.Context) error {
-		to := dto.NewRecipient(model.Name, model.Email, dto.Props{
-			"link": link(baseURL, "/signup/verify?k=%s", model.VerificationKey),
+		to := dto.NewRecipient(action.Name, action.Email, dto.Props{
+			"link": link(baseURL, "/signup/verify?k=%s", action.VerificationKey),
 		})
 
 		bus.Publish(c, &cmd.SendMail{
@@ -57,11 +58,11 @@ func SendSignUpEmail(model *models.CreateTenant, baseURL string) worker.Task {
 }
 
 //SendSignInEmail is used to send the sign in email to requestor
-func SendSignInEmail(model *models.SignInByEmail) worker.Task {
+func SendSignInEmail(email, verificationKey string) worker.Task {
 	return describe("Send sign in email", func(c *worker.Context) error {
-		to := dto.NewRecipient("", model.Email, dto.Props{
+		to := dto.NewRecipient("", email, dto.Props{
 			"tenantName": c.Tenant().Name,
-			"link":       link(web.BaseURL(c), "/signin/verify?k=%s", model.VerificationKey),
+			"link":       link(web.BaseURL(c), "/signin/verify?k=%s", verificationKey),
 		})
 
 		bus.Publish(c, &cmd.SendMail{
@@ -78,18 +79,19 @@ func SendSignInEmail(model *models.SignInByEmail) worker.Task {
 }
 
 //SendChangeEmailConfirmation is used to send the change email confirmation email to requestor
-func SendChangeEmailConfirmation(model *models.ChangeUserEmail) worker.Task {
+func SendChangeEmailConfirmation(action *actions.ChangeUserEmail) worker.Task {
 	return describe("Send change email confirmation", func(c *worker.Context) error {
+
 		previous := c.User().Email
 		if previous == "" {
 			previous = "(empty)"
 		}
 
-		to := dto.NewRecipient(model.Requestor.Name, model.Email, dto.Props{
+		to := dto.NewRecipient(action.Requestor.Name, action.Email, dto.Props{
 			"name":     c.User().Name,
 			"oldEmail": previous,
-			"newEmail": model.Email,
-			"link":     link(web.BaseURL(c), "/change-email/verify?k=%s", model.VerificationKey),
+			"newEmail": action.Email,
+			"link":     link(web.BaseURL(c), "/change-email/verify?k=%s", action.VerificationKey),
 		})
 
 		bus.Publish(c, &cmd.SendMail{
@@ -106,7 +108,7 @@ func SendChangeEmailConfirmation(model *models.ChangeUserEmail) worker.Task {
 }
 
 //NotifyAboutNewPost sends a notification (web and email) to subscribers
-func NotifyAboutNewPost(post *models.Post) worker.Task {
+func NotifyAboutNewPost(post *entity.Post) worker.Task {
 	return describe("Notify about new post", func(c *worker.Context) error {
 		// Web notification
 		users, err := getActiveSubscribers(c, post, enum.NotificationChannelWeb, enum.NotificationEventNewPost)
@@ -149,8 +151,8 @@ func NotifyAboutNewPost(post *models.Post) worker.Task {
 			"userName":   c.User().Name,
 			"content":    markdown.Full(post.Description),
 			"postLink":   linkWithText(fmt.Sprintf("#%d", post.Number), web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
-			"view":       linkWithText("View it on your browser", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
-			"change":     linkWithText("change your notification settings", web.BaseURL(c), "/settings"),
+			"view":       linkWithText("view it on your browser", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
+			"change":     linkWithText("change your notification preferences", web.BaseURL(c), "/settings"),
 			"logo":       web.LogoURL(c),
 		}
 
@@ -247,7 +249,7 @@ type EmbedField struct {
 }
 
 //NotifyAboutNewComment sends a notification (web and email) to subscribers
-func NotifyAboutNewComment(post *models.Post, comment *models.NewComment) worker.Task {
+func NotifyAboutNewComment(post *entity.Post, comment string) worker.Task {
 	return describe("Notify about new comment", func(c *worker.Context) error {
 		// Web notification
 		users, err := getActiveSubscribers(c, post, enum.NotificationChannelWeb, enum.NotificationEventNewComment)
@@ -288,11 +290,11 @@ func NotifyAboutNewComment(post *models.Post, comment *models.NewComment) worker
 			"title":       post.Title,
 			"tenantName":  c.Tenant().Name,
 			"userName":    c.User().Name,
-			"content":     markdown.Full(comment.Content),
+			"content":     markdown.Full(comment),
 			"postLink":    linkWithText(fmt.Sprintf("#%d", post.Number), web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
-			"view":        linkWithText("View it on your browser", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
+			"view":        linkWithText("view it on your browser", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
 			"unsubscribe": linkWithText("unsubscribe from it", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
-			"change":      linkWithText("change your notification settings", web.BaseURL(c), "/settings"),
+			"change":      linkWithText("change your notification preferences", web.BaseURL(c), "/settings"),
 			"logo":        web.LogoURL(c),
 		}
 
@@ -308,7 +310,7 @@ func NotifyAboutNewComment(post *models.Post, comment *models.NewComment) worker
 }
 
 //NotifyAboutStatusChange sends a notification (web and email) to subscribers
-func NotifyAboutStatusChange(post *models.Post, prevStatus enum.PostStatus) worker.Task {
+func NotifyAboutStatusChange(post *entity.Post, prevStatus enum.PostStatus) worker.Task {
 	return describe("Notify about post status change", func(c *worker.Context) error {
 		//Don't notify if previous status is the same
 		if prevStatus == post.Status {
@@ -362,9 +364,9 @@ func NotifyAboutStatusChange(post *models.Post, prevStatus enum.PostStatus) work
 			"content":     markdown.Full(post.Response.Text),
 			"status":      post.Status.Name(),
 			"duplicate":   duplicate,
-			"view":        linkWithText("View it on your browser", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
+			"view":        linkWithText("view it on your browser", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
 			"unsubscribe": linkWithText("unsubscribe from it", web.BaseURL(c), "/posts/%d/%s", post.Number, post.Slug),
-			"change":      linkWithText("change your notification settings", web.BaseURL(c), "/settings"),
+			"change":      linkWithText("change your notification preferences", web.BaseURL(c), "/settings"),
 			"logo":        web.LogoURL(c),
 		}
 
@@ -380,7 +382,7 @@ func NotifyAboutStatusChange(post *models.Post, prevStatus enum.PostStatus) work
 }
 
 //NotifyAboutDeletedPost sends a notification (web and email) to subscribers of the post that has been deleted
-func NotifyAboutDeletedPost(post *models.Post) worker.Task {
+func NotifyAboutDeletedPost(post *entity.Post) worker.Task {
 	return describe("Notify about deleted post", func(c *worker.Context) error {
 
 		// Web notification
@@ -420,7 +422,7 @@ func NotifyAboutDeletedPost(post *models.Post) worker.Task {
 			"title":      post.Title,
 			"tenantName": c.Tenant().Name,
 			"content":    markdown.Full(post.Response.Text),
-			"change":     linkWithText("change your notification settings", web.BaseURL(c), "/settings"),
+			"change":     linkWithText("change your notification preferences", web.BaseURL(c), "/settings"),
 			"logo":       web.LogoURL(c),
 		}
 
@@ -436,7 +438,7 @@ func NotifyAboutDeletedPost(post *models.Post) worker.Task {
 }
 
 //SendInvites sends one email to each invited recipient
-func SendInvites(subject, message string, invitations []*models.UserInvitation) worker.Task {
+func SendInvites(subject, message string, invitations []*actions.UserInvitation) worker.Task {
 	return describe("Send invites", func(c *worker.Context) error {
 		to := make([]dto.Recipient, len(invitations))
 		for i, invite := range invitations {
@@ -470,7 +472,7 @@ func SendInvites(subject, message string, invitations []*models.UserInvitation) 
 	})
 }
 
-func getActiveSubscribers(ctx context.Context, post *models.Post, channel enum.NotificationChannel, event enum.NotificationEvent) ([]*models.User, error) {
+func getActiveSubscribers(ctx context.Context, post *entity.Post, channel enum.NotificationChannel, event enum.NotificationEvent) ([]*entity.User, error) {
 	q := &query.GetActiveSubscribers{
 		Number:  post.Number,
 		Channel: channel,

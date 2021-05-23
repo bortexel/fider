@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/getfider/fider/app/models/cmd"
+	"github.com/getfider/fider/app/models/entity"
 	"github.com/getfider/fider/app/models/enum"
 
 	"github.com/getfider/fider/app/models/query"
 
 	"github.com/getfider/fider/app"
-	"github.com/getfider/fider/app/models"
 	"github.com/getfider/fider/app/models/dto"
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/dbx"
@@ -42,10 +42,11 @@ func LegalPage(title, file string) web.HandlerFunc {
 			return c.NotFound()
 		}
 
-		return c.Render(http.StatusOK, "legal.html", web.Props{
-			Title: title,
+		return c.Page(web.Props{
+			Title:     title,
+			ChunkName: "Legal.page",
 			Data: web.Map{
-				"Content": string(bytes),
+				"content": string(bytes),
 			},
 		})
 	}
@@ -102,16 +103,6 @@ func Page(title, description, chunkName string) web.HandlerFunc {
 	}
 }
 
-//BrowserNotSupported returns an error page for browser that Fider dosn't support
-func BrowserNotSupported() web.HandlerFunc {
-	return func(c *web.Context) error {
-		return c.Render(http.StatusOK, "browser-not-supported.html", web.Props{
-			Title:       "Browser not supported",
-			Description: "We don't support this version of your browser",
-		})
-	}
-}
-
 //NewLogError is the input model for UI errors
 type NewLogError struct {
 	Message string      `json:"message"`
@@ -121,19 +112,19 @@ type NewLogError struct {
 //LogError logs an error coming from the UI
 func LogError() web.HandlerFunc {
 	return func(c *web.Context) error {
-		input := new(NewLogError)
-		err := c.Bind(input)
+		action := new(NewLogError)
+		err := c.Bind(action)
 		if err != nil {
 			return c.Failure(err)
 		}
-		log.Debugf(c, input.Message, dto.Props{
-			"Data": input.Data,
+		log.Debugf(c, action.Message, dto.Props{
+			"Data": action.Data,
 		})
 		return c.Ok(web.Map{})
 	}
 }
 
-func validateKey(kind enum.EmailVerificationKind, c *web.Context) (*models.EmailVerification, error) {
+func validateKey(kind enum.EmailVerificationKind, c *web.Context) (*entity.EmailVerification, error) {
 	key := c.QueryParam("k")
 
 	//If key has been used, return NotFound

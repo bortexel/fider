@@ -116,6 +116,11 @@ export const fileToBase64 = async (file: File): Promise<string> => {
   })
 }
 
+export const timeAgo = (date: string | Date): number => {
+  const d = date instanceof Date ? date : new Date(date)
+  return (new Date().getTime() - d.getTime()) / 1000
+}
+
 export const isCookieEnabled = (): boolean => {
   try {
     document.cookie = "cookietest=1"
@@ -130,9 +135,9 @@ export const isCookieEnabled = (): boolean => {
 export const uploadedImageURL = (bkey: string | undefined, size?: number): string | undefined => {
   if (bkey) {
     if (size) {
-      return `${Fider.settings.tenantAssetsURL}/images/${bkey}?size=${size}`
+      return `${Fider.settings.assetsURL}/static/images/${bkey}?size=${size}`
     }
-    return `${Fider.settings.tenantAssetsURL}/images/${bkey}`
+    return `${Fider.settings.assetsURL}/static/images/${bkey}`
   }
   return undefined
 }
