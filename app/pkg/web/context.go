@@ -582,6 +582,15 @@ func BaseURL(ctx context.Context) string {
 	return ""
 }
 
+// URL return the URL from given context
+func URL(ctx context.Context) *url.URL {
+	request, ok := ctx.Value(app.RequestCtxKey).(Request)
+	if ok {
+		return request.URL
+	}
+	return nil
+}
+
 // OAuthBaseURL returns the OAuth base URL used for host-wide OAuth authentication
 // For Single Tenant HostMode, BaseURL is the current BaseURL
 // For Multi Tenant HostMode, BaseURL is //login.{HOST_DOMAIN}

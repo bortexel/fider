@@ -168,6 +168,12 @@ func NotifyAboutNewPost(post *entity.Post) worker.Task {
 			description = string([]rune(description)[:2000]) + "..."
 		}
 
+		hostUrl := web.URL(c)
+		host := ""
+		if hostUrl != nil {
+			host = hostUrl.Host
+		}
+
 		// Discord notification
 		webhookUrl := os.Getenv("DISCORD_WEBHOOK")
 		if webhookUrl != "" {
@@ -180,7 +186,7 @@ func NotifyAboutNewPost(post *entity.Post) worker.Task {
 						URL:         fmt.Sprintf(web.BaseURL(c)+"/posts/%s/%s", strconv.Itoa(post.Number), post.Slug),
 						Color:       0x2F3136,
 						Footer: &EmbedFooter{
-							Text: "Чтобы проголосовать, необходимо авторизоваться на ideas.bortexel.ru.",
+							Text: fmt.Sprintf("Чтобы проголосовать, необходимо авторизоваться на %s.", host),
 						},
 						Author: &EmbedAuthor{
 							Name:    post.User.Name,
