@@ -4,6 +4,8 @@
 
 LDFLAGS += -X github.com/getfider/fider/app/pkg/env.buildnumber=${BUILDNUMBER}
 
+
+
 ##@ Running
 
 run: ## Run Fider
@@ -24,7 +26,9 @@ build-server: ## Build server
 build-ui: ## Build all UI assets
 	NODE_ENV=production npx webpack-cli
 
-build-ssr: ## Build SSR script
+build-ssr: ## Build SSR script and locales
+	npx lingui extract public/
+	npx lingui compile
 	NODE_ENV=production node esbuild.config.js
 
 
@@ -48,10 +52,13 @@ coverage-server: build-server build-ssr ## Run all server tests (with code cover
 
 ##@ Running (Watch Mode)
 
-watch-server: build-server migrate ## Build and run server in watch mode
+watch:
+	make -j4 watch-server watch-ui
+
+watch-server: migrate ## Build and run server in watch mode
 	air -c air.conf
 
-watch-ui: clean ## Build and run server in watch mode
+watch-ui: ## Build and run server in watch mode
 	npx webpack-cli -w
 
 

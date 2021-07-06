@@ -13,24 +13,15 @@ import (
 
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
+	"github.com/getfider/fider/app/pkg/i18n"
 	"github.com/getfider/fider/app/pkg/log"
+	"github.com/getfider/fider/app/pkg/tpl"
 
 	"io/ioutil"
 
-	"github.com/getfider/fider/app/pkg/crypto"
 	"github.com/getfider/fider/app/pkg/env"
 	"github.com/getfider/fider/app/pkg/errors"
-	"github.com/getfider/fider/app/pkg/markdown"
 )
-
-var templateFunctions = template.FuncMap{
-	"md5": func(input string) string {
-		return crypto.MD5(input)
-	},
-	"markdown": func(input string) template.HTML {
-		return markdown.Full(input)
-	},
-}
 
 type clientAssets struct {
 	CSS []string
@@ -64,24 +55,16 @@ type Renderer struct {
 
 // NewRenderer creates a new Renderer
 func NewRenderer() *Renderer {
+	reactRenderer, err := NewReactRenderer("ssr.js")
+	if err != nil && env.Config.Experimental_SSR_SEO {
+		panic(errors.Wrap(err, "failed to initialize SSR renderer"))
+	}
+
 	return &Renderer{
 		templates:     make(map[string]*template.Template),
 		mutex:         sync.RWMutex{},
-		reactRenderer: NewReactRenderer("ssr.js"),
+		reactRenderer: reactRenderer,
 	}
-}
-
-//Render a template based on parameters
-func (r *Renderer) add(name string) *template.Template {
-	base := env.Path("/views/base.html")
-	file := env.Path("/views", name)
-	tpl, err := template.New("base.html").Funcs(templateFunctions).ParseFiles(base, file)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to parse template %s", file))
-	}
-
-	r.templates[name] = tpl
-	return tpl
 }
 
 func (r *Renderer) loadAssets() error {
@@ -182,12 +165,15 @@ func (r *Renderer) Render(w io.Writer, statusCode int, templateName string, prop
 		public["description"] = fmt.Sprintf("%.150s", description)
 	}
 
-	if props.ChunkName != "" {
-		private["chunkAssets"] = r.chunkedAssets[props.ChunkName]
-	}
-
 	private["assets"] = r.assets
 	private["logo"] = LogoURL(ctx)
+
+	locale := i18n.GetLocale(ctx)
+	localeChunkName := fmt.Sprintf("locale-%s-client-json", locale)
+	private["preloadAssets"] = []*clientAssets{
+		r.chunkedAssets[localeChunkName],
+		r.chunkedAssets[props.ChunkName],
+	}
 
 	if tenant == nil || tenant.LogoBlobKey == "" {
 		private["favicon"] = AssetsURL(ctx, "/static/favicon")
@@ -216,6 +202,7 @@ func (r *Renderer) Render(w io.Writer, statusCode int, templateName string, prop
 	public["props"] = props.Data
 	public["settings"] = &Map{
 		"mode":            env.Config.HostMode,
+		"locale":          locale,
 		"environment":     env.Config.Environment,
 		"googleAnalytics": env.Config.GoogleAnalytics,
 		"domain":          env.MultiTenantDomain(),
@@ -255,12 +242,8 @@ func (r *Renderer) Render(w io.Writer, statusCode int, templateName string, prop
 		}
 	}
 
-	tmpl, ok := r.templates[templateName]
-	if !ok || env.IsDevelopment() {
-		tmpl = r.add(templateName)
-	}
-
-	err = tmpl.Execute(w, Map{
+	tmpl := tpl.GetTemplate("/views/base.html", "/views/"+templateName)
+	err = tpl.Render(ctx, tmpl, w, Map{
 		"public":  public,
 		"private": private,
 	})

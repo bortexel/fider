@@ -120,11 +120,14 @@ func TestRenderer_Home_SSR(t *testing.T) {
 	ctx := newGetContext("https://demo.test.fider.io:3000/", map[string]string{
 		"User-Agent": "Googlebot",
 	})
-	ctx.SetTenant(&entity.Tenant{})
+	ctx.SetTenant(&entity.Tenant{
+		Locale: "en",
+	})
 	renderer := web.NewRenderer()
 	renderer.Render(buf, http.StatusOK, "index.html", web.Props{
 		Title:       "My Page Title",
 		Description: "My Page Description",
+		ChunkName: 	 "Test.page",
 		Data: web.Map{
 			"posts":          make([]web.Map, 0),
 			"tags":           make([]web.Map, 0),
