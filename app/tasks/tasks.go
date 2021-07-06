@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"strconv"
@@ -165,8 +164,8 @@ func NotifyAboutNewPost(post *entity.Post) worker.Task {
 		})
 
 		description := post.Description
-		if len([]rune(description)) > 2000 {
-			description = string([]rune(description)[:2000]) + "..."
+		if len([]rune(description)) > 4000 {
+			description = string([]rune(description)[:4000]) + "..."
 		}
 
 		hostUrl := web.URL(c)
