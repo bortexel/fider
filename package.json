@@ -78,7 +78,8 @@
     "format": "minimal",
     "locales": [
       "pt-BR",
-      "en"
+      "en",
+      "ru"
     ]
   },
   "browserslist": ">1%, not dead",
