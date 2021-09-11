@@ -50,6 +50,16 @@ coverage-server: build-server build-ssr ## Run all server tests (with code cover
 
 
 
+##@ E2E Testing
+
+test-e2e-server: ## Run all E2E tests
+	npx cucumber-js e2e/features/server/**/*.feature --require-module ts-node/register --require 'e2e/**/*.ts' --publish-quiet
+
+test-e2e-ui: ## Run all E2E tests
+	npx cucumber-js e2e/features/ui/**/*.feature --require-module ts-node/register --require 'e2e/**/*.ts' --publish-quiet
+
+
+
 ##@ Running (Watch Mode)
 
 watch:

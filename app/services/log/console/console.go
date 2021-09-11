@@ -32,7 +32,7 @@ func (s Service) Category() string {
 }
 
 func (s Service) Enabled() bool {
-	return !env.IsTest()
+	return !env.IsTest() && env.Config.Log.Console
 }
 
 func (s Service) Init() {

@@ -9,6 +9,7 @@ import (
 	"github.com/getfider/fider/app/handlers/apiv1"
 	"github.com/getfider/fider/app/middlewares"
 	"github.com/getfider/fider/app/models/enum"
+	"github.com/getfider/fider/app/pkg/env"
 	"github.com/getfider/fider/app/pkg/web"
 )
 
@@ -16,13 +17,16 @@ func routes(r *web.Engine) *web.Engine {
 	r.Worker().Use(middlewares.WorkerSetup())
 
 	r.Use(middlewares.CatchPanic())
+	r.Use(middlewares.Instrumentation())
 
 	r.NotFound(func(c *web.Context) error {
-		next := func(c *web.Context) error {
+		mw := middlewares.Chain(
+			middlewares.WebSetup(),
+			middlewares.Tenant(),
+		)
+		next := mw(func(c *web.Context) error {
 			return c.NotFound()
-		}
-		next = middlewares.Tenant()(next)
-		next = middlewares.WebSetup()(next)
+		})
 		return next(c)
 	})
 
@@ -133,8 +137,12 @@ func routes(r *web.Engine) *web.Engine {
 		ui.Post("/_api/notifications/read-all", handlers.ReadAllNotifications())
 		ui.Get("/_api/notifications/unread/total", handlers.TotalUnreadNotifications())
 
-		//From this step, only Collaborators and Administrators are allowed
+		// From this step, only Collaborators and Administrators are allowed
 		ui.Use(middlewares.IsAuthorized(enum.RoleCollaborator, enum.RoleAdministrator))
+
+		// locale is forced to English for administrative pages.
+		// This is meant to be removed when all pages are translated.
+		ui.Use(middlewares.SetLocale("en"))
 
 		ui.Get("/admin", handlers.GeneralSettingsPage())
 		ui.Get("/admin/advanced", handlers.AdvancedSettingsPage())
@@ -151,13 +159,25 @@ func routes(r *web.Engine) *web.Engine {
 		ui.Get("/admin/export", handlers.Page("Export · Site Settings", "", "Export.page"))
 		ui.Get("/admin/export/posts.csv", handlers.ExportPostsToCSV())
 		ui.Get("/admin/export/backup.zip", handlers.ExportBackupZip())
+		ui.Get("/admin/webhooks", handlers.ManageWebhooks())
+		ui.Post("/_api/admin/webhook", handlers.CreateWebhook())
+		ui.Put("/_api/admin/webhook/:id", handlers.UpdateWebhook())
+		ui.Delete("/_api/admin/webhook/:id", handlers.DeleteWebhook())
+		ui.Get("/_api/admin/webhook/test/:id", handlers.TestWebhook())
+		ui.Post("/_api/admin/webhook/preview", handlers.PreviewWebhook())
+		ui.Get("/_api/admin/webhook/props/:type", handlers.GetWebhookProps())
 		ui.Post("/_api/admin/settings/general", handlers.UpdateSettings())
 		ui.Post("/_api/admin/settings/advanced", handlers.UpdateAdvancedSettings())
 		ui.Post("/_api/admin/settings/privacy", handlers.UpdatePrivacy())
+		ui.Post("/_api/admin/settings/emailauth", handlers.UpdateEmailAuthAllowed())
 		ui.Post("/_api/admin/oauth", handlers.SaveOAuthConfig())
 		ui.Post("/_api/admin/roles/:role/users", handlers.ChangeUserRole())
 		ui.Put("/_api/admin/users/:userID/block", handlers.BlockUser())
 		ui.Delete("/_api/admin/users/:userID/block", handlers.UnblockUser())
+
+		if env.IsBillingEnabled() {
+			ui.Get("/admin/billing", handlers.ManageBilling())
+		}
 	}
 
 	api := r.Group()
@@ -184,6 +204,10 @@ func routes(r *web.Engine) *web.Engine {
 		//From this step, only Collaborators and Administrators are allowed
 		api.Use(middlewares.IsAuthorized(enum.RoleCollaborator, enum.RoleAdministrator))
 
+		// locale is forced to English for administrative API.
+		// This is meant to be removed when all API are translated.
+		ui.Use(middlewares.SetLocale("en"))
+
 		api.Get("/api/v1/users", apiv1.ListUsers())
 		api.Get("/api/v1/posts/:number/votes", apiv1.ListVotes())
 		api.Post("/api/v1/invitations/send", apiv1.SendInvites())
@@ -200,6 +224,10 @@ func routes(r *web.Engine) *web.Engine {
 		api.Post("/api/v1/tags", apiv1.CreateEditTag())
 		api.Put("/api/v1/tags/:slug", apiv1.CreateEditTag())
 		api.Delete("/api/v1/tags/:slug", apiv1.DeleteTag())
+
+		if env.IsBillingEnabled() {
+			api.Post("/_api/billing/checkout-link", handlers.GenerateCheckoutLink())
+		}
 	}
 
 	return r

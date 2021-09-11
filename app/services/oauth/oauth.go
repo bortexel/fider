@@ -2,11 +2,11 @@ package oauth
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/getfider/fider/app"
 	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/dto"
@@ -131,7 +131,7 @@ func parseOAuthRawProfile(ctx context.Context, c *cmd.ParseOAuthRawProfile) erro
 		profile.Name = "Anonymous"
 	}
 
-	if len(validate.Email(profile.Email)) != 0 {
+	if len(validate.Email(ctx, profile.Email)) != 0 {
 		profile.Email = ""
 	}
 
@@ -213,7 +213,7 @@ func getOAuthRawProfile(ctx context.Context, q *query.GetOAuthRawProfile) error 
 			return errors.New("AccessToken is not JWT")
 		}
 
-		body, _ := jwt.DecodeSegment(parts[1])
+		body, _ := base64.RawURLEncoding.DecodeString(parts[1])
 		q.Result = string(body)
 		return nil
 	}

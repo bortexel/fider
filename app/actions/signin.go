@@ -2,6 +2,7 @@ package actions
 
 import (
 	"context"
+	"github.com/getfider/fider/app"
 
 	"github.com/getfider/fider/app/models/entity"
 	"github.com/getfider/fider/app/models/enum"
@@ -24,7 +25,17 @@ func NewSignInByEmail() *SignInByEmail {
 
 // IsAuthorized returns true if current user is authorized to perform this action
 func (action *SignInByEmail) IsAuthorized(ctx context.Context, user *entity.User) bool {
-	return true
+	tenant := ctx.Value(app.TenantCtxKey).(*entity.Tenant)
+	if tenant.IsEmailAuthAllowed {
+		return true
+	}
+	getUser := &query.GetUserByEmail{
+		Email: action.Email,
+	}
+	if err := bus.Dispatch(ctx, getUser); err != nil {
+		return false
+	}
+	return getUser.Result != nil && getUser.Result.IsAdministrator()
 }
 
 // Validate if current model is valid
@@ -32,15 +43,11 @@ func (action *SignInByEmail) Validate(ctx context.Context, user *entity.User) *v
 	result := validate.Success()
 
 	if action.Email == "" {
-		result.AddFieldFailure("email", "Email is required.")
+		result.AddFieldFailure("email", propertyIsRequired(ctx, "email"))
 		return result
 	}
 
-	if len(action.Email) > 200 {
-		result.AddFieldFailure("email", "Email must have less than 200 characters.")
-	}
-
-	messages := validate.Email(action.Email)
+	messages := validate.Email(ctx, action.Email)
 	result.AddFieldFailure("email", messages...)
 
 	return result
@@ -83,15 +90,13 @@ func (action *CompleteProfile) Validate(ctx context.Context, user *entity.User) 
 	result := validate.Success()
 
 	if action.Name == "" {
-		result.AddFieldFailure("name", "Name is required.")
-	}
-
-	if len(action.Name) > 50 {
-		result.AddFieldFailure("name", "Name must have less than 50 characters.")
+		result.AddFieldFailure("name", propertyIsRequired(ctx, "name"))
+	} else if len(action.Name) > 50 {
+		result.AddFieldFailure("name", propertyMaxStringLen(ctx, "name", 50))
 	}
 
 	if action.Key == "" {
-		result.AddFieldFailure("key", "Key is required.")
+		result.AddFieldFailure("key", propertyIsRequired(ctx, "key"))
 	} else {
 		findBySignIn := &query.GetVerificationByKey{Kind: enum.EmailVerificationKindSignIn, Key: action.Key}
 		err1 := bus.Dispatch(ctx, findBySignIn)
@@ -104,7 +109,7 @@ func (action *CompleteProfile) Validate(ctx context.Context, user *entity.User) 
 		} else if err2 == nil {
 			action.Email = findByUserInvitation.Result.Email
 		} else {
-			result.AddFieldFailure("key", "Key is invalid.")
+			result.AddFieldFailure("key", propertyIsInvalid(ctx, "key"))
 		}
 	}
 

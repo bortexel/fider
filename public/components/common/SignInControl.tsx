@@ -2,8 +2,10 @@ import "./SignInControl.scss"
 
 import React, { useState } from "react"
 import { SocialSignInButton, Form, Button, Input, Message } from "@fider/components"
+import { Divider } from "@fider/components/layout"
 import { device, actions, Failure, isCookieEnabled } from "@fider/services"
 import { useFider } from "@fider/hooks"
+import { Trans } from "@lingui/macro"
 
 interface SignInControlProps {
   useEmail: boolean
@@ -13,8 +15,14 @@ interface SignInControlProps {
 
 export const SignInControl: React.FunctionComponent<SignInControlProps> = (props) => {
   const fider = useFider()
+  const [showEmailForm, setShowEmailForm] = useState(fider.session.tenant ? fider.session.tenant.isEmailAuthAllowed : true)
   const [email, setEmail] = useState("")
   const [error, setError] = useState<Failure | undefined>(undefined)
+
+  const forceShowEmailForm = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    setShowEmailForm(true)
+  }
 
   const signIn = async () => {
     const result = await actions.signIn(email)
@@ -51,30 +59,49 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = (props
               </React.Fragment>
             ))}
           </div>
-          <p className="text-muted">We will never post to these accounts on your behalf.</p>
+          {props.useEmail && <Divider />}
         </>
       )}
 
-      {props.useEmail && (
-        <div>
-          {providersLen > 0 && <div className="c-divider">OR</div>}
-          <p>Enter your email address to sign in</p>
-          <Form error={error}>
-            <Input
-              field="email"
-              value={email}
-              autoFocus={!device.isTouch()}
-              onChange={setEmail}
-              placeholder="yourname@example.com"
-              suffix={
-                <Button type="submit" variant="primary" disabled={email === ""} onClick={signIn}>
-                  Sign in
-                </Button>
-              }
-            />
-          </Form>
-        </div>
-      )}
+      {props.useEmail &&
+        (showEmailForm ? (
+          <div>
+            <p>
+              <Trans id="signin.message.email">Enter your email address to sign in</Trans>
+            </p>
+            <Form error={error}>
+              <Input
+                field="email"
+                value={email}
+                autoFocus={!device.isTouch()}
+                onChange={setEmail}
+                placeholder="yourname@example.com"
+                suffix={
+                  <Button type="submit" variant="primary" disabled={email === ""} onClick={signIn}>
+                    <Trans id="action.signin">Sign in</Trans>
+                  </Button>
+                }
+              />
+            </Form>
+            {!fider.session.tenant.isEmailAuthAllowed && (
+              <p className="text-red-700 mt-1">
+                <Trans id="signin.message.onlyadmins">Currently only allowed to sign in to an administrator account</Trans>
+              </p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <p className="text-muted">
+              <Trans id="signin.message.emaildisabled">
+                Email authentication has been disabled by an administrator. If you have an administrator account and need to bypass this restriction, please{" "}
+                <a href="#" className="text-bold" onClick={forceShowEmailForm}>
+                  click here
+                </a>
+                .
+              </Trans>
+            </p>
+          </div>
+        ))}
     </div>
   )
 }

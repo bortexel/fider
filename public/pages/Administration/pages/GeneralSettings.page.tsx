@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 
-import {Button, ButtonClickEvent, TextArea, Form, Input, ImageUploader, Select} from "@fider/components"
+import { Button, ButtonClickEvent, TextArea, Form, Input, ImageUploader, Select } from "@fider/components"
 import { AdminPageContainer } from "../components/AdminBasePage"
 import { actions, Failure, Fider } from "@fider/services"
 import { ImageUpload } from "@fider/models"
@@ -112,13 +112,13 @@ const GeneralSettingsPage = () => {
           </Input>
         )}
 
-         <Select
+        <Select
           label="Locale"
           field="locale"
           defaultValue={locale}
           options={Object.entries(locales).map(([k, v]) => ({
             value: k,
-            label: v.text,
+            label: `${v.text} (${v.translated}%)`,
           }))}
           onChange={(o) => setLocale(o?.value || "en")}
         >
@@ -130,8 +130,9 @@ const GeneralSettingsPage = () => {
                 <a className="text-link" target="_blank" rel="noopener" href="https://crowdin.com/project/fider">
                   Crowdin
                 </a>{" "}
-                and contribute with your own translations.
+                and contribute with your own translations. No technical knowledge required.
               </p>
+              <p className="text-muted">Only public pages are translated. Internal and/or administrative pages will remain in English.</p>
             </>
           )}
         </Select>

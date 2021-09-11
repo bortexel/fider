@@ -31,7 +31,7 @@ func (s Service) Enabled() bool {
 func (s Service) Init() {
 	bus.AddHandler(storeEvent)
 
-	bus.AddListener(purgeExpiredNotifications)
+	bus.AddHandler(purgeExpiredNotifications)
 
 	bus.AddHandler(markAllNotificationsAsRead)
 	bus.AddHandler(markNotificationAsRead)
@@ -41,6 +41,7 @@ func (s Service) Init() {
 	bus.AddHandler(addNewNotification)
 	bus.AddHandler(addSubscriber)
 	bus.AddHandler(removeSubscriber)
+	bus.AddHandler(supressEmail)
 	bus.AddHandler(getActiveSubscribers)
 
 	bus.AddHandler(getTagBySlug)
@@ -106,6 +107,7 @@ func (s Service) Init() {
 	bus.AddHandler(isCNAMEAvailable)
 	bus.AddHandler(updateTenantSettings)
 	bus.AddHandler(updateTenantPrivacySettings)
+	bus.AddHandler(updateTenantEmailAuthAllowedSettings)
 	bus.AddHandler(updateTenantAdvancedSettings)
 
 	bus.AddHandler(getVerificationByKey)
@@ -115,6 +117,14 @@ func (s Service) Init() {
 	bus.AddHandler(listCustomOAuthConfig)
 	bus.AddHandler(getCustomOAuthConfigByProvider)
 	bus.AddHandler(saveCustomOAuthConfig)
+
+	bus.AddHandler(getWebhook)
+	bus.AddHandler(listAllWebhooks)
+	bus.AddHandler(listAllWebhooksByType)
+	bus.AddHandler(listActiveWebhooksByType)
+	bus.AddHandler(createEditWebhook)
+	bus.AddHandler(deleteWebhook)
+	bus.AddHandler(markWebhookAsFailed)
 }
 
 type SqlHandler func(trx *dbx.Trx, tenant *entity.Tenant, user *entity.User) error

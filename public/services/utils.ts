@@ -34,7 +34,7 @@ export const formatDate = (locale: string, input: Date | string, format: DateFor
 
 export const timeSince = (locale: string, now: Date, date: Date): string => {
   try {
-    const seconds = (now.getTime() - date.getTime()) / 1000
+    const seconds = Math.round((now.getTime() - date.getTime()) / 1000)
     const minutes = Math.round(seconds / 60)
     const hours = Math.round(minutes / 60)
     const days = Math.round(hours / 24)
@@ -110,4 +110,8 @@ export const truncate = (input: string, maxLength: number): string => {
     return `${input.substr(0, maxLength)}...`
   }
   return input
+}
+
+export type StringObject<T = any> = {
+  [key: string]: T
 }
